@@ -1,4 +1,4 @@
-package com.example.facemesh.ui
+package com.example.cognistate.ui.screens
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState

@@ -1,4 +1,4 @@
-package com.example.cognishield.services
+package com.example.cognistate.services
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription

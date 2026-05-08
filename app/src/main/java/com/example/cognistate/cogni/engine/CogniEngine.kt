@@ -1,6 +1,7 @@
 package com.example.cognistate.cogni.engine
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import com.example.cognistate.cogni.ai.CogniClassifier
 import com.example.cognistate.cogni.fusion.SensorFusionEngine
@@ -127,9 +128,19 @@ object CogniEngine {
             }
         }
 
+        // Step 2.5 — Start PhoneBioService with a small delay to ensure context is ready
+        scope.launch {
+            delay(1000)
+            val intent = Intent(context, PhoneBioService::class.java)
+            context.startForegroundService(intent)
+            Log.i(TAG, "Requested PhoneBioService start")
+        }
+
         // Step 3 — Main inference loop: collect BioFrames and publish CogniState
         scope.launch {
+            Log.i(TAG, "Starting BioFrame collection loop...")
             PhoneBioService.bioFrameFlow.collect { frame ->
+                Log.d(TAG, "Received BioFrame: eda=${frame.eda}, hrv=${frame.hrv}")
                 processBioFrame(frame)
             }
         }

@@ -97,6 +97,7 @@ class PhoneBioService : LifecycleService() {
     // ─────────────────────────────────────────────────────────────────────────
 
     override fun onCreate() {
+        Log.i(TAG, "PhoneBioService.onCreate() — starting rPPG pipeline")
         // Create notification channel and start foreground
         val channelId = "cogni_sensor"
         val channel = android.app.NotificationChannel(
@@ -115,6 +116,7 @@ class PhoneBioService : LifecycleService() {
         Log.i(TAG, "PhoneBioService created — starting rPPG pipeline")
         startCameraThread()
         openRearCamera()
+        // startSyntheticFallback()
         startEmitLoop()
     }
 
@@ -135,6 +137,7 @@ class PhoneBioService : LifecycleService() {
     // ─────────────────────────────────────────────────────────────────────────
 
     private fun startCameraThread() {
+        Log.i(TAG, "Starting CogniRearCam thread")
         cameraThread = HandlerThread("CogniRearCam").also { it.start() }
         cameraHandler = Handler(cameraThread!!.looper)
     }
@@ -144,6 +147,7 @@ class PhoneBioService : LifecycleService() {
      * Captures YUV_420_888 frames at 64×64 to minimise CPU load.
      */
     private fun openRearCamera() {
+        Log.i(TAG, "Opening rear camera...")
         cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
 
         // Find rear camera ID
@@ -328,22 +332,27 @@ class PhoneBioService : LifecycleService() {
     private fun startEmitLoop() {
         serviceScope.launch {
             Log.i(TAG, "BioFrame emit loop started")
-            while (isActive) {
-                val ppg = ppgBuffer.lastOrNull() ?: 0f
-                val hrv = smoothedHrv
-                // EDA proxy: inverse of HRV, smoothed
-                val eda = (1f - smoothedHrv).coerceIn(0f, 1f)
+            try {
+                while (isActive) {
+                    val ppg = ppgBuffer.lastOrNull() ?: 0f
+                    val hrv = smoothedHrv
+                    // EDA proxy: inverse of HRV, smoothed
+                    val eda = (1f - smoothedHrv).coerceIn(0f, 1f)
 
-                val frame = BioFrame(
-                    eda = eda,
-                    hrv = hrv,
-                    ppg = ppg,
-                    imuCadence = 0f,   // injected by CogniEngine
-                    gazeScore = 0f,    // injected by CogniEngine
-                    timestamp = System.currentTimeMillis()
-                )
-                _bioFrameFlow.emit(frame)
-                delay(EMIT_INTERVAL_MS)
+                    val frame = BioFrame(
+                        eda = eda,
+                        hrv = hrv,
+                        ppg = ppg,
+                        imuCadence = 0f,   // injected by CogniEngine
+                        gazeScore = 0f,    // injected by CogniEngine
+                        timestamp = System.currentTimeMillis()
+                    )
+                    _bioFrameFlow.emit(frame)
+                    Log.v(TAG, "Emitted BioFrame: ppg=$ppg, hrv=$hrv")
+                    delay(EMIT_INTERVAL_MS)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in emit loop", e)
             }
         }
     }

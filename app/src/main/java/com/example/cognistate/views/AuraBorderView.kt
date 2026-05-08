@@ -1,4 +1,4 @@
-package com.example.cognishield.views
+package com.example.cognistate.views
 
 import android.animation.ValueAnimator
 import android.content.Context
@@ -14,13 +14,13 @@ class AuraBorderView(context: Context) : View(context) {
 
         paint.strokeWidth = 12f
 
-        paint.color = Color.parseColor("#00D4FF")
+        paint.color = Color.RED
 
         paint.setShadowLayer(
-            35f,
+            45f,
             0f,
             0f,
-            Color.CYAN
+            Color.RED
         )
 
         setLayerType(LAYER_TYPE_SOFTWARE, paint)

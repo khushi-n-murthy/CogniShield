@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">CogniState</string>
+    <string name="app_name">CogniShield</string>
+    <string name="accessibility_description">CogniShield uses accessibility to monitor focus and help you stay in flow.</string>
 </resources>

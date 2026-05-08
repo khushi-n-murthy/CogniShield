@@ -2,33 +2,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ================================================================
-         Existing permission (kept from teammates' code)
-         ================================================================ -->
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
+    <!-- Overlay permission -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-
-    <!-- ================================================================
-         Added by Khushi — Phone-only sensor pipeline
-         ================================================================ -->
-
-    <!-- Rear camera: rPPG (PPG/HRV/EDA proxy via green channel) -->
-    <!-- Front camera: pupil dilation tracking via MediaPipe -->
+    <!-- Standard permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
-
-    <!-- Keeps PhoneBioService alive in background -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
-    <!-- IMU / accelerometer — no permission needed on Android, declared for clarity -->
-    <!-- Accelerometer is a normal sensor, no runtime permission required -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
 
     <application
         android:name=".CogniApplication"
@@ -39,33 +25,68 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.CogniState">
+        android:theme="@style/Theme.CogniState"
+        tools:targetApi="31">
 
-        <!-- ================================================================
-             Existing activity (kept from teammates' code)
-             ================================================================ -->
+        <!-- Main launcher activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.CogniState">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
-        <!-- ================================================================
-             Added by Khushi — PhoneBioService
-             Streams EDA/PPG/HRV from rear camera rPPG every 250 ms.
-             exported=false: only this app can start it (no external access needed).
-             foregroundServiceType=camera: required on Android 14+ to use camera
-             from a background service.
-             ================================================================ -->
+        <!-- Notification Listener Service -->
+        <service
+            android:name=".services.CogniNotificationListener"
+            android:label="CogniShield Neural Voicemail"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+
+        </service>
+
+        <!-- Accessibility Service -->
+        <service
+            android:name=".services.CogniAccessibilityService"
+            android:label="CogniShield Focus Guard"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_config" />
+
+        </service>
+
+        <!-- Overlay / utility services -->
+        <service
+            android:name=".services.AuraBorderService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
+
+        <service
+            android:name=".services.GrayscaleOverlayService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
+
         <service
             android:name=".cogni.sensor.PhoneBioService"
             android:exported="false"
-            android:foregroundServiceType="camera" />
+            android:foregroundServiceType="specialUse" />
 
     </application>
 

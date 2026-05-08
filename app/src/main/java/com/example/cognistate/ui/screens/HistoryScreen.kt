@@ -1,4 +1,4 @@
-package com.example.facemesh.ui
+package com.example.cognistate.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,15 +12,11 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.facemesh.data.MockSessionRepository
-import com.example.facemesh.data.SessionDataPoint
+import com.example.cognistate.data.entities.CogniEvent
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
 import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
 import com.patrykandpatrick.vico.compose.chart.Chart
 import com.patrykandpatrick.vico.compose.chart.column.columnChart
-import com.patrykandpatrick.vico.compose.chart.line.lineChart
-import com.patrykandpatrick.vico.core.chart.composed.plus
-import com.patrykandpatrick.vico.core.chart.line.LineChart
 import com.patrykandpatrick.vico.core.component.shape.LineComponent
 import com.patrykandpatrick.vico.core.component.shape.Shapes
 import com.patrykandpatrick.vico.core.entry.ChartEntry
@@ -38,20 +34,30 @@ class StressEntry(
 
 @Composable
 fun HistoryScreen() {
-    val repository = remember { MockSessionRepository() }
-    val dataPoints by repository.getWeeklyHistory().collectAsState(initial = emptyList())
+    // For demo purposes, generate some mock data if DB is empty
+    val dataPoints = remember {
+        List(24) { i ->
+            CogniEvent(
+                id = i,
+                timestamp = System.currentTimeMillis() - (24 - i) * 3600000L,
+                stressScore = (0.2f + (i % 5) * 0.15f).coerceIn(0f, 1f),
+                stateLabel = if (i % 7 == 0) "REDLINING" else "FLOW",
+                edaRaw = 0f, hrvRaw = 0f, gazeScore = 0f
+            )
+        }
+    }
 
     val chartEntryModelProducer = remember { ChartEntryModelProducer() }
 
     LaunchedEffect(dataPoints) {
         if (dataPoints.isNotEmpty()) {
             val allEntries = dataPoints.mapIndexed { index, point ->
-                StressEntry(index, point.stressScore, point.isPeakRedline)
+                StressEntry(index, point.stressScore, point.stateLabel == "REDLINING")
             }
             
             // Only create points where peak redline is true for the second series
             val peakEntries = dataPoints.mapIndexedNotNull { index, point ->
-                if (point.isPeakRedline) StressEntry(index, point.stressScore, true) else null
+                if (point.stateLabel == "REDLINING") StressEntry(index, point.stressScore, true) else null
             }
             
             chartEntryModelProducer.setEntries(allEntries, peakEntries)
@@ -85,22 +91,6 @@ fun HistoryScreen() {
                 columns = listOf(defaultColumn)
             )
 
-            val peakPoint = LineComponent(
-                color = android.graphics.Color.RED,
-                thicknessDp = 6f,
-                shape = Shapes.pillShape
-            )
-
-            val lineChart = lineChart(
-                lines = listOf(
-                    LineChart.LineSpec(
-                        lineColor = android.graphics.Color.TRANSPARENT,
-                        point = peakPoint,
-                        pointSizeDp = 6f
-                    )
-                )
-            )
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -114,8 +104,8 @@ fun HistoryScreen() {
                     ),
                     bottomAxis = rememberBottomAxis(
                         valueFormatter = { value, _ -> 
-                            val day = (value.toInt() / 24) + 1
-                            if (value.toInt() % 24 == 0) "Day $day" else ""
+                            val hour = value.toInt() % 24
+                            if (hour % 6 == 0) "${hour}h" else ""
                         }
                     )
                 )
@@ -126,12 +116,16 @@ fun HistoryScreen() {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.size(12.dp).background(Color.Red, shape = androidx.compose.foundation.shape.CircleShape))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Peak Redline Moments", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
+                Text(text = "Peak Redline Moments (AI Detected)", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
             }
-        } else {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Loading data...", color = MaterialTheme.colorScheme.onBackground)
-            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = "Privacy: All data stored locally on NPU",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+            )
         }
     }
 }

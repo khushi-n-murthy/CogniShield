@@ -1,4 +1,4 @@
-package com.example.cognishield.services
+package com.example.cognistate.services
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -9,9 +9,9 @@ import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import androidx.core.app.NotificationCompat
-import com.example.cognishield.R
-import com.example.cognishield.database.AppDatabase
-import com.example.cognishield.database.SuppressedNotification
+import com.example.cognistate.R
+import com.example.cognistate.data.database.CogniDatabase
+import com.example.cognistate.data.entities.SuppressedNotif
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,14 +39,16 @@ class CogniNotificationListener : NotificationListenerService() {
             val title = extras.getString("android.title") ?: "No Title"
 
             val text = extras.getString("android.text") ?: "No Text"
-            val db = AppDatabase.getDatabase(applicationContext)
+            val db = CogniDatabase.getDatabase(applicationContext)
 
             CoroutineScope(Dispatchers.IO).launch {
 
-                db.notificationDao().insert(
-                    SuppressedNotification(
+                db.suppressedNotifDao().insert(
+                    SuppressedNotif(
+                        packageName = packageName,
                         title = title,
-                        text = text
+                        text = text,
+                        timestamp = System.currentTimeMillis()
                     )
                 )
             }

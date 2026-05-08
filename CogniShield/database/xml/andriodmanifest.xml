@@ -1,0 +1,28 @@
+<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+<uses-permission android:name="android.permission.WRITE_SETTINGS"/>
+
+<application>
+    <service
+        android:name=".services.CogniAccessibilityService"
+        android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+        android:exported="true">
+
+        <intent-filter>
+            <action android:name="android.accessibilityservice.AccessibilityService"/>
+        </intent-filter>
+
+        <meta-data
+            android:name="android.accessibilityservice"
+            android:resource="@xml/accessibility_config"/>
+    </service>
+
+    <service
+        android:name=".services.CogniNotificationListener"
+        android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+        android:exported="true">
+
+        <intent-filter>
+            <action android:name="android.service.notification.NotificationListenerService"/>
+        </intent-filter>
+    </service>
+</application>

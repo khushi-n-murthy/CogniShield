@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CogniState"
+rootProject.name = "CogniShield"
 include(":app")
  

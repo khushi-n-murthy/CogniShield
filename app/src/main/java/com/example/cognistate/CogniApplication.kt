@@ -1,8 +1,9 @@
-package com.cognishield
+package com.example.cognistate
 
 import android.app.Application
 import android.util.Log
-import com.cognishield.engine.CogniEngine
+import com.example.cognistate.cogni.engine.CogniEngine
+import com.example.cognistate.cogni.sensor.ImuCadenceAnalyser
 
 /**
  * CogniApplication — Application subclass that boots CogniEngine.
@@ -16,6 +17,9 @@ import com.cognishield.engine.CogniEngine
 class CogniApplication : Application() {
 
     private val TAG = "CogniApp"
+
+    val imuAnalyzer: ImuCadenceAnalyser
+        get() = CogniEngine.imuAnalyzer!!
 
     override fun onCreate() {
         super.onCreate()

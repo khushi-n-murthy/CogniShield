@@ -49,6 +49,7 @@ class ImuCadenceAnalyser(private val context: Context) : SensorEventListener {
     // Exposed cadence score [0, 1]
     private val _cadenceFlow = MutableStateFlow(0f)
     val cadenceFlow: StateFlow<Float> = _cadenceFlow.asStateFlow()
+    val imuScoreFlow: StateFlow<Float> = cadenceFlow
 
     companion object {
         // Maximum expected jerk in m/s³ — calibrated empirically on Galaxy S24

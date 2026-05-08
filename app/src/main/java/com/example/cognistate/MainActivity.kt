@@ -14,20 +14,36 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
+import android.content.Intent
+
+
+import com.example.cognistate.cogni.engine.CogniEngine
+import com.example.cognistate.cogni.model.CogniState
 import com.example.cognistate.haptic.HapticController
+import com.example.cognistate.imu.IMUAnalyzer
 import com.example.cognistate.ui.theme.CogniStateTheme
 
 class MainActivity : ComponentActivity() {
 
     private val imuAnalyzer by lazy {
-        (application as CogniApplication).imuAnalyzer
+        IMUAnalyzer(applicationContext)
     }
 
     private lateinit var hapticController: HapticController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        imuAnalyzer.start()
+        // Start the rPPG sensor service
+        val bioServiceIntent = Intent(this, com.example.cognistate.cogni.sensor.PhoneBioService::class.java)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            startForegroundService(bioServiceIntent)
+        } else {
+            startService(bioServiceIntent)
+        }
 
         hapticController = HapticController(this)
 
@@ -39,6 +55,10 @@ class MainActivity : ComponentActivity() {
 
                 val imuScore by
                 imuAnalyzer.imuScoreFlow.collectAsState()
+
+                // NEW
+                val cogniState by
+                CogniEngine.CogniStateFlow.collectAsState()
 
                 LaunchedEffect(imuScore) {
 
@@ -62,8 +82,39 @@ class MainActivity : ComponentActivity() {
                         text = String.format("%.2f", imuScore),
                         fontSize = 40.sp
                     )
+
+                    // NEW
+                    Text(
+                        text = cogniState.stateLabel.name,
+                        fontSize = 32.sp,
+                        color = when (cogniState.stateLabel) {
+
+                            CogniState.StateLabel.FLOW ->
+                                Color.Green
+
+                            CogniState.StateLabel.RECOVERY ->
+                                Color.Yellow
+
+                            CogniState.StateLabel.REDLINING ->
+                                Color.Red
+                        }
+                    )
+
+                    // NEW
+                    Text(
+                        text = "Stress: ${
+                            "%.2f".format(cogniState.stressScore)
+                        }",
+                        fontSize = 20.sp
+                    )
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        imuAnalyzer.stop()
+        stopService(Intent(this, com.example.cognistate.cogni.sensor.PhoneBioService::class.java))
     }
 }

@@ -101,15 +101,13 @@ fun HistoryScreen() {
                 )
             )
 
-            val composedChart = remember(columnChart, lineChart) { columnChart + lineChart }
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(300.dp)
             ) {
                 Chart(
-                    chart = composedChart,
+                    chart = columnChart,
                     chartModelProducer = chartEntryModelProducer,
                     startAxis = rememberStartAxis(
                         valueFormatter = { value, _ -> "%.1f".format(value) }

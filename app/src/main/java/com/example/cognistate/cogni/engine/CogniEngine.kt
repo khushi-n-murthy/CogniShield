@@ -2,13 +2,13 @@ package com.example.cognistate.cogni.engine
 
 import android.content.Context
 import android.util.Log
-import com.cognishield.ai.CogniClassifier
-import com.cognishield.fusion.SensorFusionEngine
-import com.cognishield.model.BioFrame
-import com.cognishield.model.CogniState
-import com.cognishield.sensor.BioSensorService
-import com.cognishield.sensor.GazeGatingAnalyser
-import com.cognishield.sensor.ImuCadenceAnalyser
+import com.example.cognistate.cogni.ai.CogniClassifier
+import com.example.cognistate.cogni.fusion.SensorFusionEngine
+import com.example.cognistate.cogni.model.BioFrame
+import com.example.cognistate.cogni.model.CogniState
+import com.example.cognistate.cogni.sensor.PhoneBioService
+import com.example.cognistate.cogni.sensor.GazeGatingAnalyser
+import com.example.cognistate.cogni.sensor.ImuCadenceAnalyser
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -47,7 +47,8 @@ object CogniEngine {
 
     // Module instances — created fresh on each [start] call
     private var classifier: CogniClassifier? = null
-    private var imuAnalyser: ImuCadenceAnalyser? = null
+    var imuAnalyzer: ImuCadenceAnalyser? = null
+        private set
     private var gazeAnalyser: GazeGatingAnalyser? = null
 
     // Sliding window: last 20 BioFrames fed into the TFLite model
@@ -109,7 +110,7 @@ object CogniEngine {
         val scope = engineScope!!
 
         // Step 1 — Start side-channel analysers
-        imuAnalyser = ImuCadenceAnalyser(context.applicationContext).also { it.start() }
+        imuAnalyzer = ImuCadenceAnalyser(context.applicationContext).also { it.start() }
         gazeAnalyser = GazeGatingAnalyser(context.applicationContext).also { it.init() }
 
         // Step 2 — Load TFLite model on IO dispatcher (file I/O)
@@ -128,7 +129,7 @@ object CogniEngine {
 
         // Step 3 — Main inference loop: collect BioFrames and publish CogniState
         scope.launch {
-            BioSensorService.bioFrameFlow.collect { frame ->
+            PhoneBioService.bioFrameFlow.collect { frame ->
                 processBioFrame(frame)
             }
         }
@@ -149,8 +150,8 @@ object CogniEngine {
         classifier?.close()
         classifier = null
 
-        imuAnalyser?.stop()
-        imuAnalyser = null
+        imuAnalyzer?.stop()
+        imuAnalyzer = null
 
         gazeAnalyser?.close()
         gazeAnalyser = null
@@ -176,7 +177,7 @@ object CogniEngine {
     private suspend fun processBioFrame(rawFrame: BioFrame) {
         // Enrich frame with side-channel signals
         val enrichedFrame = rawFrame.copy(
-            imuCadence = imuAnalyser?.cadenceFlow?.value ?: 0f,
+            imuCadence = imuAnalyzer?.cadenceFlow?.value ?: 0f,
             gazeScore = gazeAnalyser?.gazeScoreFlow?.value ?: 0f
         )
 

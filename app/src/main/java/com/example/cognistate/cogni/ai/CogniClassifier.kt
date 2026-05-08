@@ -2,8 +2,8 @@ package com.example.cognistate.cogni.ai
 
 import android.content.Context
 import android.util.Log
-import com.cognishield.model.BioFrame
-import com.cognishield.model.CogniState
+import com.example.cognistate.cogni.model.BioFrame
+import com.example.cognistate.cogni.model.CogniState
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.nnapi.NnApiDelegate
 import org.tensorflow.lite.gpu.GpuDelegate

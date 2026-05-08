@@ -29,7 +29,7 @@ class IMUAnalyzer(context: Context) : SensorEventListener {
 
     private var lastTimestampMs = 0L
 
-    private val MAX_JERK = 50f
+    private val MAX_JERK = 15f
 
     fun start() {
 

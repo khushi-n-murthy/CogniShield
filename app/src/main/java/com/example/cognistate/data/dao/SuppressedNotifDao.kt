@@ -15,11 +15,11 @@ interface SuppressedNotifDao {
 
     @Query("""
         SELECT * FROM suppressed_notifs
-        WHERE timestamp BETWEEN :start AND :end
+        WHERE timestamp BETWEEN :startTime AND :endTime
         ORDER BY timestamp DESC
     """)
     fun queryByDay(
-        start: Long,
-        end: Long
+        startTime: Long,
+        endTime: Long
     ): Flow<List<SuppressedNotif>>
 }

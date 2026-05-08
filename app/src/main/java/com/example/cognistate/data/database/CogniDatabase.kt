@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.cognistate.data.dao.CogniEventDao
+import com.example.cognistate.data.dao.SuppressedNotifDao
 import com.example.cognistate.data.entities.CogniEvent
 import com.example.cognistate.data.entities.SuppressedNotif
 
@@ -13,11 +14,13 @@ import com.example.cognistate.data.entities.SuppressedNotif
         CogniEvent::class,
         SuppressedNotif::class
     ],
-    version = 1
+    version = 1,
+    exportSchema = false
 )
 abstract class CogniDatabase : RoomDatabase() {
 
     abstract fun cogniEventDao(): CogniEventDao
+    abstract fun suppressedNotifDao(): SuppressedNotifDao
 
     companion object {
 

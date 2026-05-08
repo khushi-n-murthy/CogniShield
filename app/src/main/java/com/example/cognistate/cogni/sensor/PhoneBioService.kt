@@ -9,7 +9,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import androidx.lifecycle.LifecycleService
-import com.cognishield.model.BioFrame
+import com.example.cognistate.cogni.model.BioFrame
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -97,6 +97,20 @@ class PhoneBioService : LifecycleService() {
     // ─────────────────────────────────────────────────────────────────────────
 
     override fun onCreate() {
+        // Create notification channel and start foreground
+        val channelId = "cogni_sensor"
+        val channel = android.app.NotificationChannel(
+            channelId, "CogniShield Sensors",
+            android.app.NotificationManager.IMPORTANCE_LOW
+        )
+        val nm = getSystemService(android.app.NotificationManager::class.java)
+        nm.createNotificationChannel(channel)
+        val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
+            .setContentTitle("CogniShield active")
+            .setContentText("Monitoring cognitive state")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .build()
+        startForeground(1, notification)
         super.onCreate()
         Log.i(TAG, "PhoneBioService created — starting rPPG pipeline")
         startCameraThread()

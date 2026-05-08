@@ -1,10 +1,10 @@
 package com.example.cognistate.cogni.fusion
 
 import android.util.Log
-import com.cognishield.model.BioFrame
-import com.cognishield.model.CogniState
-import com.cognishield.sensor.ImuCadenceAnalyser
-import com.cognishield.sensor.GazeGatingAnalyser
+import com.example.cognistate.cogni.model.BioFrame
+import com.example.cognistate.cogni.model.CogniState
+import com.example.cognistate.cogni.sensor.ImuCadenceAnalyser
+import com.example.cognistate.cogni.sensor.GazeGatingAnalyser
 import kotlinx.coroutines.flow.StateFlow
 
 /**

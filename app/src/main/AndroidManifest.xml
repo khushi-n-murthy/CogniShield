@@ -5,7 +5,15 @@
     <!-- ================================================================
          Existing permission (kept from teammates' code)
          ================================================================ -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <!-- ================================================================
          Added by Khushi — Phone-only sensor pipeline

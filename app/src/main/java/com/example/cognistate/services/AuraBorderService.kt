@@ -1,12 +1,10 @@
 package com.example.cognistate.services
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.graphics.PixelFormat
-import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.view.Gravity
@@ -33,7 +31,7 @@ class AuraBorderService : Service() {
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY, // Better for overlaying system UI
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
@@ -54,15 +52,13 @@ class AuraBorderService : Service() {
 
     private fun startForegroundServiceWithNotification() {
         val channelId = "shield_service"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "CogniShield Protections",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(
+            channelId,
+            "CogniShield Protections",
+            NotificationManager.IMPORTANCE_LOW
+        )
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(channel)
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Shield Active")
@@ -76,7 +72,13 @@ class AuraBorderService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        windowManager.removeView(auraView)
+        if (::windowManager.isInitialized && ::auraView.isInitialized) {
+            try {
+                windowManager.removeView(auraView)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error removing aura view", e)
+            }
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? {

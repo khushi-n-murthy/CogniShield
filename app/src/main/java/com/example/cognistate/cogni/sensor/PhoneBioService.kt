@@ -127,11 +127,6 @@ class PhoneBioService : LifecycleService() {
         Log.i(TAG, "PhoneBioService destroyed")
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        super.onStartCommand(intent, flags, startId)
-        return START_STICKY
-    }
-
     // ─────────────────────────────────────────────────────────────────────────
     // Camera setup
     // ─────────────────────────────────────────────────────────────────────────
@@ -428,15 +423,33 @@ class PhoneBioService : LifecycleService() {
         return sqrt(variance.toDouble()).toFloat()
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == "STOP_SERVICE") {
+            stopSelf()
+            return START_NOT_STICKY
+        }
+        super.onStartCommand(intent, flags, startId)
+        return START_STICKY
+    }
+
     private fun stopCamera() {
-        captureSession?.close()
-        cameraDevice?.close()
-        imageReader?.close()
-        cameraThread?.quitSafely()
-        captureSession = null
-        cameraDevice = null
-        imageReader = null
-        cameraThread = null
-        cameraHandler = null
+        Log.i(TAG, "Stopping camera and flash...")
+        try {
+            captureSession?.stopRepeating()
+            captureSession?.close()
+            captureSession = null
+
+            cameraDevice?.close()
+            cameraDevice = null
+
+            imageReader?.close()
+            imageReader = null
+
+            cameraThread?.quitSafely()
+            cameraThread = null
+            cameraHandler = null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during camera shutdown", e)
+        }
     }
 }

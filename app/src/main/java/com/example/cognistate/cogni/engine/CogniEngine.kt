@@ -153,7 +153,7 @@ object CogniEngine {
      * After calling stop(), [CogniStateFlow] will retain its last emitted value
      * but will not update further.
      */
-    fun stop() {
+    fun stop(context: Context) {
         Log.i(TAG, "CogniEngine stopping...")
         engineScope?.cancel()
         engineScope = null
@@ -166,6 +166,12 @@ object CogniEngine {
 
         gazeAnalyser?.close()
         gazeAnalyser = null
+
+        // Explicitly stop PhoneBioService to turn off flash
+        val intent = Intent(context, PhoneBioService::class.java).apply {
+            action = "STOP_SERVICE"
+        }
+        context.startService(intent)
 
         bioWindow.clear()
         modelReady = false

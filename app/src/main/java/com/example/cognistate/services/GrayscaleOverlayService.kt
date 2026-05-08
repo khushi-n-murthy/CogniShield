@@ -5,7 +5,6 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.graphics.*
-import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.view.Gravity
@@ -17,7 +16,7 @@ class GrayscaleOverlayService : Service() {
 
     private val TAG = "GrayscaleService"
     private lateinit var windowManager: WindowManager
-    private lateinit var overlayView: GrayscaleView
+    private lateinit var overlayView: ShieldTintView
 
     override fun onCreate() {
         super.onCreate()
@@ -27,12 +26,12 @@ class GrayscaleOverlayService : Service() {
 
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
-        overlayView = GrayscaleView(this)
+        overlayView = ShieldTintView(this)
 
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
@@ -43,9 +42,9 @@ class GrayscaleOverlayService : Service() {
 
         try {
             windowManager.addView(overlayView, params)
-            Log.i(TAG, "Grayscale view added")
+            Log.i(TAG, "Shield Tint view added")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to add grayscale view", e)
+            Log.e(TAG, "Failed to add shield tint view", e)
         }
     }
 
@@ -70,7 +69,13 @@ class GrayscaleOverlayService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        windowManager.removeView(overlayView)
+        if (::windowManager.isInitialized && ::overlayView.isInitialized) {
+            try {
+                windowManager.removeView(overlayView)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error removing shield tint view", e)
+            }
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -78,16 +83,14 @@ class GrayscaleOverlayService : Service() {
     }
 }
 
-class GrayscaleView(context: android.content.Context) : View(context) {
+class ShieldTintView(context: android.content.Context) : View(context) {
 
     private val paint = Paint().apply {
-        colorFilter = ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(0f) })
+        // A semi-transparent grey tint to simulate desaturation/focus mode
+        color = Color.parseColor("#40000000") // 25% opaque black
     }
 
     override fun onDraw(canvas: Canvas) {
-        // Draw a translucent layer with the grayscale filter
-        // Note: Full hardware-accelerated grayscale of external apps usually requires 
-        // AccessibilityService or a hardware color transform. This view applies to the overlay layer.
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
     }
 }

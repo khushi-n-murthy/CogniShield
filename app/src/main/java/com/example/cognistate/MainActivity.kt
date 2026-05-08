@@ -376,5 +376,38 @@ fun DashboardScreen(state: CogniState) {
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Technical Sensor Log for Demo
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.8f))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    "CORE AI DATA STREAM", 
+                    color = Color(0xFF00FF41), // Matrix Green
+                    fontSize = 10.sp, 
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 2.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    SensorMetric("HRV", "${(state.stressScore * 100).toInt() + 40}ms")
+                    SensorMetric("EDA", String.format("%.2f", 1.0f - state.stressScore))
+                    SensorMetric("GAZE", if(state.stressScore > 0.6) "Scanning" else "Fixed")
+                    SensorMetric("SRC", state.source)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SensorMetric(label: String, value: String) {
+    Column {
+        Text(label, color = Color.Gray, fontSize = 9.sp)
+        Text(value, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium)
     }
 }

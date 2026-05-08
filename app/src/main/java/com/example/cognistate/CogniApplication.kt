@@ -29,7 +29,7 @@ class CogniApplication : Application() {
 
     override fun onTerminate() {
         super.onTerminate()
-        CogniEngine.stop()
+        CogniEngine.stop(applicationContext)
         Log.i(TAG, "CogniEngine stopped")
     }
 }

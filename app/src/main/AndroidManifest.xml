@@ -1,7 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <uses-permission android:name="android.permission.VIBRATE"/>
+
+    <!-- ================================================================
+         Existing permission (kept from teammates' code)
+         ================================================================ -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- ================================================================
+         Added by Khushi — Phone-only sensor pipeline
+         ================================================================ -->
+
+    <!-- Rear camera: rPPG (PPG/HRV/EDA proxy via green channel) -->
+    <!-- Front camera: pupil dilation tracking via MediaPipe -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Keeps PhoneBioService alive in background -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+
+    <!-- IMU / accelerometer — no permission needed on Android, declared for clarity -->
+    <!-- Accelerometer is a normal sensor, no runtime permission required -->
+
     <application
         android:name=".CogniApplication"
         android:allowBackup="true"
@@ -12,6 +32,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CogniState">
+
+        <!-- ================================================================
+             Existing activity (kept from teammates' code)
+             ================================================================ -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -19,10 +43,22 @@
             android:theme="@style/Theme.CogniState">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- ================================================================
+             Added by Khushi — PhoneBioService
+             Streams EDA/PPG/HRV from rear camera rPPG every 250 ms.
+             exported=false: only this app can start it (no external access needed).
+             foregroundServiceType=camera: required on Android 14+ to use camera
+             from a background service.
+             ================================================================ -->
+        <service
+            android:name=".cogni.sensor.PhoneBioService"
+            android:exported="false"
+            android:foregroundServiceType="camera" />
+
     </application>
 
 </manifest>

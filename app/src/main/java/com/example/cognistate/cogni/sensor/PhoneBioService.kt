@@ -150,13 +150,21 @@ class PhoneBioService : LifecycleService() {
         Log.i(TAG, "Opening rear camera...")
         cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
 
-        // Find rear camera ID
+        // Find rear camera ID that has a flash
         val rearId = cameraManager!!.cameraIdList.firstOrNull { id ->
+            val chars = cameraManager!!.getCameraCharacteristics(id)
+            val hasFlash = chars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) ?: false
+            val isBack = chars.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK
+            Log.d(TAG, "Camera $id: back=$isBack, flash=$hasFlash")
+            isBack && hasFlash
+        } ?: cameraManager!!.cameraIdList.firstOrNull { id ->
             val chars = cameraManager!!.getCameraCharacteristics(id)
             chars.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK
         } ?: run {
             Log.e(TAG, "No rear camera found"); return
         }
+
+        Log.i(TAG, "Selected camera $rearId for rPPG")
 
         // ImageReader: small frames, green channel extraction is all we need
         imageReader = ImageReader.newInstance(
@@ -165,27 +173,37 @@ class PhoneBioService : LifecycleService() {
             4   // max images in flight
         )
         imageReader!!.setOnImageAvailableListener({ reader ->
-            reader.acquireLatestImage()?.use { image ->
-                processRawFrame(image)
+            val img = reader.acquireLatestImage()
+            if (img != null) {
+                processRawFrame(img)
+                img.close()
             }
         }, cameraHandler)
 
         try {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                Log.e(TAG, "Camera permission NOT granted in Service check")
+                startSyntheticFallback()
+                return
+            }
             cameraManager!!.openCamera(rearId, object : CameraDevice.StateCallback() {
                 override fun onOpened(camera: CameraDevice) {
+                    Log.i(TAG, "Camera $rearId opened successfully")
                     cameraDevice = camera
                     startCaptureSession(camera)
                 }
                 override fun onDisconnected(camera: CameraDevice) {
+                    Log.w(TAG, "Camera $rearId disconnected")
                     camera.close(); cameraDevice = null
                 }
                 override fun onError(camera: CameraDevice, error: Int) {
                     Log.e(TAG, "Camera error $error — rPPG unavailable")
                     camera.close(); cameraDevice = null
+                    startSyntheticFallback()
                 }
             }, cameraHandler)
         } catch (e: SecurityException) {
-            Log.e(TAG, "Camera permission denied — rPPG will use synthetic data", e)
+            Log.e(TAG, "Camera permission denied (SecurityException) — using fallback", e)
             startSyntheticFallback()
         } catch (e: Exception) {
             Log.e(TAG, "Camera open failed", e)

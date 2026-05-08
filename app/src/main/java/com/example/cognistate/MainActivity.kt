@@ -99,6 +99,9 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         updatePermissions()
+        if (isSetupComplete()) {
+            startEngine()
+        }
     }
 
     private fun isSetupComplete() =
